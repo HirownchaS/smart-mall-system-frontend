@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import Slider from "react-slick";
 import axios from "axios";
 
 const Testimonials = () => {
@@ -10,41 +9,49 @@ const Testimonials = () => {
   const renderCount = useRef(0);
 
   useEffect(() => {
-    console.log('Component mounted');
+    console.log("Component mounted");
     let isMounted = true;
-    
+
     const fetchTestimonials = async () => {
       fetchCount.current += 1;
       console.log(`Fetch attempt #${fetchCount.current}`);
-      
+
       try {
         const response = await axios.get(
           "http://localhost:8080/api/feedback/v1/getAlls"
         );
+
+        if (!isMounted) return;
         
-        console.log("Raw data length:", response.data.length);
-        console.log("Raw IDs:", response.data.map(item => item._id));
+        console.log("Raw response data:", response.data);
         
-        if (isMounted) {
-          // Create a Map to deduplicate based on _id
-          const uniqueMap = new Map();
-          response.data.forEach(item => {
-            if (!uniqueMap.has(item._id)) {
-              uniqueMap.set(item._id, item);
-            }
-          });
-          
-          const uniqueTestimonials = Array.from(uniqueMap.values());
-          console.log("Unique testimonials length:", uniqueTestimonials.length);
-          console.log("Unique IDs:", uniqueTestimonials.map(item => item._id));
-          
-          setTestimonials(uniqueTestimonials);
-          setLoading(false);
+        if (!response.data || !Array.isArray(response.data)) {
+          throw new Error("Invalid response format");
         }
+
+        // Filter out items without _id
+        const validItems = response.data.filter(item => item && item._id);
+        console.log("Valid items count:", validItems.length);
+        
+        // Use Set to track processed IDs
+        const processedIds = new Set();
+        const uniqueTestimonials = [];
+        
+        for (const item of validItems) {
+          if (!processedIds.has(item._id)) {
+            processedIds.add(item._id);
+            uniqueTestimonials.push(item);
+          }
+        }
+        
+        console.log("Final unique testimonials count:", uniqueTestimonials.length);
+
+        setTestimonials(uniqueTestimonials);
+        setLoading(false);
       } catch (err) {
         console.error("Fetch error:", err);
         if (isMounted) {
-          setError(err.message);
+          setError(err.message || "Failed to fetch testimonials");
           setLoading(false);
         }
       }
@@ -53,58 +60,18 @@ const Testimonials = () => {
     fetchTestimonials();
 
     return () => {
-      console.log('Component cleanup');
+      console.log("Component cleanup");
       isMounted = false;
     };
-  }, []); // Empty dependency array
+  }, []);
 
   // Debug render count
   renderCount.current += 1;
-  console.log(`Render #${renderCount.current}`);
-
-  const settings = {
-    dots: true,
-    arrows: false,
-    infinite: true,
-    speed: 500,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 2000,
-    cssEase: "linear",
-    pauseOnHover: true,
-    pauseOnFocus: true,
-    responsive: [
-      {
-        breakpoint: 10000,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-          infinite: true,
-        },
-      },
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-          initialSlide: 2,
-        },
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        },
-      },
-    ],
-  };
+  console.log(`Render #${renderCount.current}, testimonials length: ${testimonials.length}`);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-
-  // Debug final testimonials before render
-  console.log("Rendering testimonials length:", testimonials.length);
+  if (testimonials.length === 0) return <div>No testimonials available</div>;
 
   return (
     <div className="py-10 mb-10">
@@ -116,37 +83,35 @@ const Testimonials = () => {
           <h1 data-aos="fade-up" className="text-3xl font-bold">
             Reviews
           </h1>
+          {/* <p className="mt-2 text-gray-500">Total reviews: {testimonials.length}</p> */}
         </div>
-        <div data-aos="zoom-in">
-          <Slider {...settings}>
-            {testimonials.map((data, index) => {
-              console.log(`Rendering testimonial ${index}:`, data._id);
-              return (
-                <div className="my-6" key={data._id}>
-                  <div className="flex flex-col gap-4 shadow-lg py-8 px-6 mx-4 rounded-xl dark:bg-gray-800 bg-primary/10 relative">
-                    <div className="mb-4">
-                      <img
-                        src={data.userId.profile_picture}
-                        alt=""
-                        className="rounded-full w-20 h-20"
-                      />
-                    </div>
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="space-y-3">
-                        <h1 className="text-xl font-bold text-black/80 dark:text-light">
-                          {data.userId.username}
-                        </h1>
-                        <p className="text-xs text-gray-500">{data.feedback}</p>
-                      </div>
-                    </div>
-                    <p className="text-black/20 text-9xl font-serif absolute top-0 right-0">
-                      ,,
-                    </p>
+        
+        {/* Grid layout instead of slider */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-aos="zoom-in">
+          {testimonials.map((data) => (
+            <div className="my-2" key={data._id}>
+              <div className="flex flex-col gap-4 shadow-lg py-8 px-6 rounded-xl dark:bg-gray-800 bg-primary/10 relative h-full">
+                <div className="mb-4">
+                  <img
+                    className="rounded-full h-24 w-24"
+                    src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                    alt="user-profile"
+                  />
+                </div>
+                <div className="flex flex-col items-center gap-4">
+                  <div className="space-y-3">
+                    <h1 className="text-xl font-bold text-black/80 dark:text-light">
+                      {data.userId && data.userId.username ? data.userId.username : "Anonymous User"}
+                    </h1>
+                    <p className="text-xs text-gray-500">{data.feedback}</p>
                   </div>
                 </div>
-              );
-            })}
-          </Slider>
+                <p className="text-black/20 text-9xl font-serif absolute top-0 right-0">
+                  ,,
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
