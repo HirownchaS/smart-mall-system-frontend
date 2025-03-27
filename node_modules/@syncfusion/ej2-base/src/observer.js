@@ -174,7 +174,7 @@ var Observer = /** @class */ (function () {
         if (eventsArr) {
             for (var i = 0; i < eventsArr.length; i++) {
                 var curContext = eventsArr[parseInt(i.toString(), 10)].context;
-                if (curContext && curContext.detectFunction && curContext.randomId && !curContext.isRendered) {
+                if (curContext && curContext.detectFunction && curContext.randomId && curContext.isReactMock) {
                     this.off('notifyExternalChange', curContext.detectFunction, curContext.randomId);
                     i--;
                 }

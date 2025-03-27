@@ -1,9 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
- import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 import axios from 'axios';
 import Register from './Register';
 import { AuthContext } from '../../helper/AuthContext';
@@ -11,7 +11,6 @@ import { AuthContext } from '../../helper/AuthContext';
 
 function Login({ modal, setModal }) {
   const { setAuthState} = useContext(AuthContext)
-  // const { register, handleSubmit, formState: { errors } } = useForm();
   const [showRegister, setShowRegister] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,35 +22,32 @@ function Login({ modal, setModal }) {
     setShowRegister(false);
   };
 
-const navigate = useNavigate()
+  const navigate = useNavigate()
 
   const schema = yup.object().shape({
-    
-      email : yup.string().email().required(),
-      password : yup.string().required(),
-     
-
+    email : yup.string().email().required(),
+    password : yup.string().required(),
   })
+  
   const {register , handleSubmit ,formState : {errors}} = useForm({
-      resolver : yupResolver(schema)
+    resolver : yupResolver(schema)
   })
-  const onSubmit=(data)=>{
+  
+  const onSubmit = (data) => {
     const login_data = {
-        email : data.email,
-        password : data.password
+      email : data.email,
+      password : data.password
     }
-   axios.post('http://localhost:8080/api/user/login',login_data).then((res)=>{
     
-    if(res.data.error){
-        //alert(res.data.error)
+    axios.post('http://localhost:8080/api/user/login', login_data).then((res) => {
+      if(res.data.error){
+        // Use ONLY the error message from the server without adding extra text
         Swal.fire({
           icon: 'error',
-          title: res.data.error,
+          title: 'Login Failed',
           text: 'The provided email/password was not found. Please check and try again.',
         });
-
-    }else{
-        
+      } else {
         localStorage.setItem('authtoken', res.data.token)
         setAuthState(res.data.token);
         Swal.fire({
@@ -59,15 +55,18 @@ const navigate = useNavigate()
           title: 'Login Successful',
           text: 'You have successfully logged in!',
         }).then(() => {
-          setModal(false); // Close the modal after success
-          
-           navigate('/')
-           window.location.reload();
+          setModal(false);
+          navigate('/')
+          window.location.reload();
         });
-        
-    }
-  
-   })
+      }
+    }).catch(err => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: 'The provided email/password was not found. Please check and try again.',
+      });
+    });
   }
 
   return (
@@ -128,6 +127,6 @@ const navigate = useNavigate()
       </div>
     </div>
   );
-
 }
+
 export default Login;

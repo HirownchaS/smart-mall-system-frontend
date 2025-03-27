@@ -136,6 +136,11 @@ var Browser = /** @class */ (function () {
             browserDetails['isDevice'] = true;
             browserDetails['isTouch'] = true;
             browserDetails['isPointer'] = true;
+            // Set 'isPointer' for pointer-enabled devices (e.g., iPad on Safari)
+            browserDetails['isPointer'] = ('pointerEnabled' in window.navigator);
+        }
+        if (typeof window !== 'undefined' && window.Capacitor && window.Capacitor.getPlatform() === 'ios') {
+            browserDetails['isPointer'] = false;
         }
         if ('undefined' === typeof browserDetails["" + key]) {
             return browserDetails["" + key] = regX.test(Browser.userAgent);

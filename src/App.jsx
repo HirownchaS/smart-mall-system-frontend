@@ -34,6 +34,7 @@ const App = () => {
           } else {
             console.log("userData? " + res.data);
             setAuthState(token);
+            localStorage.setItem('id',res.data._id);
           }
         })
         .catch((err) => {
@@ -54,7 +55,7 @@ const App = () => {
           <Route path="/store/:id" element={<StoreDetail/>} />
           <Route path="/combo" element={<ComboPack/>} />
           <Route path="/bookings" element={<ParkingTickets/>}/>
-          <Route path="/events" element={<Event/>}/>
+          <Route path="/events" element={<Event />}/>
           <Route path="/profile" element={<Profile/>}/>
           
          

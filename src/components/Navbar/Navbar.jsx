@@ -100,6 +100,7 @@ const Navbar = () => {
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("authtoken");
+    localStorage.removeItem("id");
     setToken(null);
     setUserData(null);
     Swal.fire({
